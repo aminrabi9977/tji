@@ -1,4 +1,3 @@
-
 import os
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
@@ -33,11 +32,19 @@ class ContentAnalyzer:
    - حداقل 700 کلمه
    - پاراگراف اول به عنوان مقدمه، بدون عنوان باشد
    - بخش‌های میانی هر کدام دارای:
-     *  یک عنوان مشخص بدون علامت (#)
+     * یک عنوان مشخص بدون علامت (#)
      * یک پاراگراف مرتبط با آن عنوان
-   - پاراگراف پایانی به عنوان جمع‌بندی، بدون عنوان باشد
-4. هشتگ: 3 تا 4 هشتگ مرتبط با موضوع اصلی خبر
-
+   - عنوان پاراگراف ها با (##) شروع شود
+   - پاراگراف پایانی به عنوان جمع‌بندی، بدون تیتر "جمع بندی" باشد
+4. هشتگ: 1 کلمه کلیدی مرتبط با موضوع اصلی خبر (بدون علامت #)
+5. کلمه کلیدی SEO: یک کلمه یا عبارت کلیدی اصلی را مشخص کنید که:
+   - آن کلمه یا عبارت عیناً در عنوان خبر استفاده شده باشد
+   - آن کلمه یا عبارت عیناً در خلاصه مطلب استفاده شده باشد
+   - آن کلمه یا عبارت عیناً در ابتدای متن (پاراگراف اول) استفاده شده باشد
+   - آمکلمه یا عبارت عیناً در متن اصلی استفاده شده باشد
+   - بهترین کلمه کلیدی برای سئو باشد
+   - با کلمه کلیدی هشتگ متفاوت باشد
+   - کلمه کلیدی اصلی بدون نیم فاصله باشد
 خروجی باید دقیقاً در این قالب باشد:
 
 TITLE:
@@ -50,7 +57,10 @@ CONTENT:
 [متن کامل خبر]
 
 HASHTAGS:
-[هشتگ‌ها]"""
+[کلمات کلیدی با کاما جدا شده]
+
+SEO_KEYWORD:
+[کلمه کلیدی اصلی برای سئو]"""
 
     def analyze_content(self, content: str) -> websiteReport:
         try:
@@ -70,7 +80,8 @@ HASHTAGS:
                 'title': '',
                 'summary': '',
                 'content': [],
-                'hashtags': ''
+                'hashtags': '',
+                'seo_keyword': ''
             }
 
             for line in sections:
@@ -90,6 +101,9 @@ HASHTAGS:
                 elif 'HASHTAGS:' in line:
                     current_section = 'hashtags'
                     continue
+                elif 'SEO_KEYWORD:' in line:
+                    current_section = 'seo_keyword'
+                    continue
 
                 if current_section == 'title' and not data['title']:
                     data['title'] = line
@@ -99,18 +113,21 @@ HASHTAGS:
                     data['content'].append(line)
                 elif current_section == 'hashtags' and not data['hashtags']:
                     data['hashtags'] = line
+                elif current_section == 'seo_keyword' and not data['seo_keyword']:
+                    data['seo_keyword'] = line
 
             # Join content with proper line breaks
             full_content = '\n'.join(data['content'])
 
             # Verify all sections have content
-            if all([data['title'], data['summary'], full_content, data['hashtags']]):
+            if all([data['title'], data['summary'], full_content, data['hashtags'], data['seo_keyword']]):
                 print("Successfully parsed all sections")
                 return websiteReport(
                     title=data['title'],
                     summary=data['summary'],
                     content=full_content,
-                    hasgtag=data['hashtags']
+                    hasgtag=data['hashtags'],
+                    seo_keyword=data['seo_keyword']
                 )
             else:
                 print("Warning: Missing required fields in LLM response")
@@ -118,6 +135,7 @@ HASHTAGS:
                 print(f"Summary present: {bool(data['summary'])}")
                 print(f"Content present: {bool(full_content)}")
                 print(f"Hashtags present: {bool(data['hashtags'])}")
+                print(f"SEO keyword present: {bool(data['seo_keyword'])}")
                 return None
 
         except Exception as e:

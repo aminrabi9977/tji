@@ -1,11 +1,3 @@
-# from pydantic import BaseModel
-# from typing import List, Optional
-# class websiteReport(BaseModel):
-#     title: str
-#     summary: str
-#     content: str
-#     hasgtag: str
-# ----------------------------------
 from pydantic import BaseModel
 from typing import List, Optional
 from pydantic.config import ConfigDict
@@ -17,3 +9,4 @@ class websiteReport(BaseModel):
     summary: str
     content: str
     hasgtag: str
+    seo_keyword: str
